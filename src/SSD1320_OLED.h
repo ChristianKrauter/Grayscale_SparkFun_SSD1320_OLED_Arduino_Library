@@ -98,6 +98,7 @@ class SSD1320 : public Print {
             uint8_t sdoutPin = SDOUT_PIN_DEFAULT,
             SPIClass *spiInterface = &SPI);
     void begin(uint16_t, uint16_t);
+    void begin(uint16_t, uint16_t, HardwareSerial*);
     virtual size_t write(uint8_t);
 
     // RAW LCD functions
@@ -182,4 +183,5 @@ class SSD1320 : public Print {
     uint16_t fontMapWidth;
 
     uint8_t flipByte(uint8_t thing);
+    HardwareSerial* printer;
 };

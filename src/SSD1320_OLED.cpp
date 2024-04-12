@@ -132,6 +132,12 @@ void SSD1320::begin(uint16_t lcdWidth, uint16_t lcdHeight) {
   powerUp();
 }
 
+void SSD1320::begin(uint16_t lcdWidth, uint16_t lcdHeight, HardwareSerial* hwPrint) {
+  printer = hwPrint;
+  printer->println("SSD1320 Serial Printer working");
+  begin(lcdWidth, lcdHeight);
+}
+
 ///////////////////////
 // Private Functions //
 ///////////////////////
