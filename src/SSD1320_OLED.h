@@ -125,23 +125,31 @@ class SSD1320 : public Print {
 
     void line(uint8_t x0, uint8_t y0, uint8_t x1, uint8_t y1);
     void line(uint8_t x0, uint8_t y0, uint8_t x1, uint8_t y1, uint8_t color, uint8_t mode);
+    void lineGS(uint8_t x0, uint8_t y0, uint8_t x1, uint8_t y1, uint8_t grayscale);
     void lineH(uint8_t x, uint8_t y, uint8_t width);
     void lineH(uint8_t x, uint8_t y, uint8_t width, uint8_t color, uint8_t mode);
+    void lineHGS(uint8_t x, uint8_t y, uint8_t width, uint8_t grayscale);
     void lineV(uint8_t x, uint8_t y, uint8_t height);
     void lineV(uint8_t x, uint8_t y, uint8_t height, uint8_t color, uint8_t mode);
+    void lineVGS(uint8_t x, uint8_t y, uint8_t height, uint8_t grayscale);
 
     void rect(uint8_t x, uint8_t y, uint8_t width, uint8_t height);
     void rect(uint8_t x, uint8_t y, uint8_t width, uint8_t height, uint8_t color , uint8_t mode);
+    void rectGS(uint8_t x, uint8_t y, uint8_t width, uint8_t height, uint8_t grayscale);
     void rectFill(uint8_t x, uint8_t y, uint8_t width, uint8_t height);
     void rectFill(uint8_t x, uint8_t y, uint8_t width, uint8_t height, uint8_t color , uint8_t mode);
+    void rectFillGS(uint8_t x, uint8_t y, uint8_t width, uint8_t height, uint8_t grayscale);
 
     void circle(uint8_t x, uint8_t y, uint8_t radius);
     void circle(uint8_t x, uint8_t y, uint8_t radius, uint8_t color, uint8_t mode);
+    void circleGS(uint8_t x0, uint8_t y0, uint8_t radius, uint8_t grayscale);
     void circleFill(uint8_t x0, uint8_t y0, uint8_t radius);
     void circleFill(uint8_t x0, uint8_t y0, uint8_t radius, uint8_t color, uint8_t mode);
+    void circleFillGS(uint8_t x0, uint8_t y0, uint8_t radius, uint8_t grayscale);
 
     void drawChar(uint8_t x, uint8_t y, uint8_t c);
     void drawChar(uint8_t x, uint8_t y, uint8_t c, uint8_t color, uint8_t mode);
+    void drawCharGS(uint8_t x, uint8_t y, uint8_t c, uint8_t grayscale);
 
     void drawBitmap(uint8_t *bitArray);
 

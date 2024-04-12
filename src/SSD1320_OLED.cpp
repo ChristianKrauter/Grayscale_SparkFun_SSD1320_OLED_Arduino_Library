@@ -517,6 +517,48 @@ void SSD1320::line(uint8_t x0, uint8_t y0, uint8_t x1, uint8_t y1, uint8_t color
   }
 }
 
+/** \brief Draw grayscale line.
+  Draw line using 4bit grayscale color (0-15) from x0,y0 to x1,y1 of the screen buffer.
+*/
+void SSD1320::lineGS(uint8_t x0, uint8_t y0, uint8_t x1, uint8_t y1, uint8_t grayscale) {
+  uint8_t steep = abs(y1 - y0) > abs(x1 - x0);
+  if (steep) {
+    swap(x0, y0);
+    swap(x1, y1);
+  }
+
+  if (x0 > x1) {
+    swap(x0, x1);
+    swap(y0, y1);
+  }
+
+  uint8_t dx, dy;
+  dx = x1 - x0;
+  dy = abs(y1 - y0);
+
+  int8_t err = dx / 2;
+  int8_t ystep;
+
+  if (y0 < y1) {
+    ystep = 1;
+  } else {
+    ystep = -1;
+  }
+
+  for (; x0 < x1; x0++) {
+    if (steep) {
+      setPixelGS(y0, x0, grayscale);
+    } else {
+      setPixelGS(x0, y0, grayscale);
+    }
+    err -= dy;
+    if (err < 0) {
+      y0 += ystep;
+      err += dx;
+    }
+  }
+}
+
 /** \brief Draw horizontal line.
   Draw horizontal line using current fore color and current draw mode from x,y to x+width,y of the screen buffer.
 */
@@ -531,6 +573,13 @@ void SSD1320::lineH(uint8_t x, uint8_t y, uint8_t width, uint8_t color, uint8_t 
   line(x, y, x + width, y, color, mode);
 }
 
+/** \brief Draw horizontal grayscale line.
+  Draw horizontal line using 4bit grayscale color (0-15) from x,y to x+width,y of the screen buffer.
+*/
+void SSD1320::lineHGS(uint8_t x, uint8_t y, uint8_t width, uint8_t grayscale) {
+  line(x, y, x + width, y, grayscale);
+}
+
 /** \brief Draw vertical line.
   Draw vertical line using current fore color and current draw mode from x,y to x,y+height of the screen buffer.
 */
@@ -543,6 +592,13 @@ void SSD1320::lineV(uint8_t x, uint8_t y, uint8_t height) {
 */
 void SSD1320::lineV(uint8_t x, uint8_t y, uint8_t height, uint8_t color, uint8_t mode) {
   line(x, y, x, y + height, color, mode);
+}
+
+/** \brief Draw vertical grayscale line
+  Draw vertical line using 4bit grayscale color (0-15) from x,y to x,y+height of the screen buffer.
+*/
+void SSD1320::lineVGS(uint8_t x, uint8_t y, uint8_t height, uint8_t grayscale) {
+  line(x, y, x, y + height, grayscale);
 }
 
 /** \brief Draw rectangle.
@@ -571,6 +627,25 @@ void SSD1320::rect(uint8_t x, uint8_t y, uint8_t width, uint8_t height, uint8_t 
   lineV(x + width - 1, y + 1, tempHeight, color, mode);
 }
 
+/** \brief Draw grayscale rectangle
+  Draw rectangle using 4bit grayscale color (0-15) from x,y to x+width,y+height of the screen buffer.
+*/
+void SSD1320::rectGS(uint8_t x, uint8_t y, uint8_t width, uint8_t height, uint8_t grayscale) {
+  uint8_t tempHeight;
+
+  lineHGS(x, y, width, grayscale);
+  lineHGS(x, y + height - 1, width, grayscale);
+
+  tempHeight = height - 2;
+
+  // skip drawing vertical lines to avoid overlapping of pixel that will
+  // affect XOR plot if no pixel in between horizontal lines
+  if (tempHeight < 1) return;
+
+  lineVGS(x, y + 1, tempHeight, grayscale);
+  lineVGS(x + width - 1, y + 1, tempHeight, grayscale);
+}
+
 /** \brief Draw filled rectangle.
   Draw filled rectangle using current fore color and current draw mode from x,y to x+width,y+height of the screen buffer.
 */
@@ -585,6 +660,16 @@ void SSD1320::rectFill(uint8_t x, uint8_t y, uint8_t width, uint8_t height, uint
   // TODO - need to optimise the memory map draw so that this function will not call pixel one by one
   for (int i = x; i < x + width; i++) {
     lineV(i, y, height, color, mode);
+  }
+}
+
+/** \brief Draw filled grayscale rectangle
+  Draw filled rectangle using 4bit grayscale color (0-15) from x,y to x+width,y+height of the screen buffer.
+*/
+void SSD1320::rectFillGS(uint8_t x, uint8_t y, uint8_t width, uint8_t height, uint8_t grayscale) {
+  // TODO - need to optimise the memory map draw so that this function will not call pixel one by one
+  for (int i = x; i < x + width; i++) {
+    lineVGS(i, y, height, grayscale);
   }
 }
 
@@ -633,6 +718,44 @@ void SSD1320::circle(uint8_t x0, uint8_t y0, uint8_t radius, uint8_t color, uint
   }
 }
 
+/** \brief Draw grayscale circle
+  Draw circle with radius using 4bit grayscale color (0-15) at x,y of the screen buffer.
+*/
+void SSD1320::circleGS(uint8_t x0, uint8_t y0, uint8_t radius, uint8_t grayscale) {
+  //TODO - find a way to check for no overlapping of pixels so that XOR draw mode will work perfectly
+  int8_t f = 1 - radius;
+  int8_t ddF_x = 1;
+  int8_t ddF_y = -2 * radius;
+  int8_t x = 0;
+  int8_t y = radius;
+
+  setPixelGS(x0, y0 + radius, grayscale);
+  setPixelGS(x0, y0 - radius, grayscale);
+  setPixelGS(x0 + radius, y0, grayscale);
+  setPixelGS(x0 - radius, y0, grayscale);
+
+  while (x < y) {
+    if (f >= 0) {
+      y--;
+      ddF_y += 2;
+      f += ddF_y;
+    }
+    x++;
+    ddF_x += 2;
+    f += ddF_x;
+
+    setPixelGS(x0 + x, y0 + y, grayscale);
+    setPixelGS(x0 - x, y0 + y, grayscale);
+    setPixelGS(x0 + x, y0 - y, grayscale);
+    setPixelGS(x0 - x, y0 - y, grayscale);
+
+    setPixelGS(x0 + y, y0 + x, grayscale);
+    setPixelGS(x0 - y, y0 + x, grayscale);
+    setPixelGS(x0 + y, y0 - x, grayscale);
+    setPixelGS(x0 - y, y0 - x, grayscale);
+  }
+}
+
 /** \brief Draw filled circle.
     Draw filled circle with radius using current fore color and current draw mode at x,y of the screen buffer.
 */
@@ -675,6 +798,45 @@ void SSD1320::circleFill(uint8_t x0, uint8_t y0, uint8_t radius, uint8_t color, 
     for (uint8_t i = y0 - x ; i <= y0 + x ; i++) {
       setPixel(x0 + y, i, color, mode);
       setPixel(x0 - y, i, color, mode);
+    }
+  }
+}
+
+/** \brief Draw filled grayscale circle
+    Draw filled circle with radius using 4bit grayscale color (0-15) at x,y of the screen buffer.
+*/
+void SSD1320::circleFillGS(uint8_t x0, uint8_t y0, uint8_t radius, uint8_t grayscale) {
+  // TODO - - find a way to check for no overlapping of pixels so that XOR draw mode will work perfectly
+  int8_t f = 1 - radius;
+  int8_t ddF_x = 1;
+  int8_t ddF_y = -2 * radius;
+  int8_t x = 0;
+  int8_t y = radius;
+
+  // Temporary disable fill circle for XOR mode.
+  if (mode == XOR) return;
+
+  for (uint8_t i = y0 - radius ; i <= y0 + radius ; i++) {
+    setPixelGS(x0, i, grayscale);
+  }
+
+  while (x < y) {
+    if (f >= 0) {
+      y--;
+      ddF_y += 2;
+      f += ddF_y;
+    }
+    x++;
+    ddF_x += 2;
+    f += ddF_x;
+
+    for (uint8_t i = y0 - y ; i <= y0 + y ; i++) {
+      setPixelGS(x0 + x, i, grayscale);
+      setPixelGS(x0 - x, i, grayscale);
+    }
+    for (uint8_t i = y0 - x ; i <= y0 + x ; i++) {
+      setPixelGS(x0 + y, i, grayscale);
+      setPixelGS(x0 - y, i, grayscale);
     }
   }
 }
@@ -763,6 +925,85 @@ void  SSD1320::drawChar(uint8_t x, uint8_t y, uint8_t c, uint8_t color, uint8_t 
   }
 }
 
+/** \brief Draw grayscale character
+    Draw character c using 4bit grayscale color (0-15) at x,y.
+*/
+void  SSD1320::drawCharGS(uint8_t x, uint8_t y, uint8_t c, uint8_t grayscale) {
+  // TODO - New routine to take font of any height, at the moment limited to font height in multiple of 8 pixels
+
+  uint8_t rowsToDraw, row, tempC;
+  uint8_t i, j, temp;
+  uint16_t charPerBitmapRow, charColPositionOnBitmap, charRowPositionOnBitmap, charBitmapStartPosition;
+
+  if ((c < fontStartChar) || (c > (fontStartChar + fontTotalChar - 1))) // no bitmap available for the required c
+    return;
+
+  tempC = c - fontStartChar; //Turn user's character into a byte number
+
+  // each row (in datasheet is called a page) is 8 bits high, 16 bit high character will have 2 rows to be drawn
+  rowsToDraw = fontHeight / 8; // 8 is LCD's page size, see datasheet
+  if (rowsToDraw < 1) rowsToDraw = 1;
+
+  // The following draw function can draw anywhere on the screen, but SLOW pixel by pixel draw
+  if (rowsToDraw == 1) {
+    for  (i = 0 ; i < fontWidth + 1 ; i++)
+    {
+      if (i == fontWidth) // this is done in a weird way because for 5x7 font, there is no margin, this code add a margin after col 5
+        temp = 0;
+      else
+        temp = pgm_read_byte(fontsPointer[fontType] + FONTHEADERSIZE + (tempC * fontWidth) + i);
+
+      //0x7F is the first vertical line of the lowercase letter h
+      //The fonts are coming in upside down?
+      temp = flipByte(temp);
+
+      //Step through this line of the character checking each bit and setting a pixel
+      for (j = 0 ; j < 8 ; j++)
+      {
+        if (temp & 0x01) {
+          setPixelGS(x + i, y + j, grayscale);
+        }
+        // TODO check this line and adjust to grayscale. Original: setPixel(x + i, y + j, !color, mode);
+        else {
+          setPixelGS(x + i, y + j, grayscale);
+        }
+
+        temp >>= 1;
+      }
+    }
+    return;
+  }
+
+  // Font height over 8 bit
+  // Take character "0" ASCII 48 as example
+  charPerBitmapRow = fontMapWidth / fontWidth; // 256/8 = 32 char per row
+  charColPositionOnBitmap = tempC % charPerBitmapRow; // = 16
+  charRowPositionOnBitmap = int(tempC / charPerBitmapRow); // = 1
+  charBitmapStartPosition = (charRowPositionOnBitmap * fontMapWidth * (fontHeight / 8)) + (charColPositionOnBitmap * fontWidth) ;
+
+  for (row = 0 ; row < rowsToDraw ; row++) {
+    for (i = 0 ; i < fontWidth ; i++) {
+      temp = pgm_read_byte(fontsPointer[fontType] + FONTHEADERSIZE + (charBitmapStartPosition + i + (row * fontMapWidth)));
+
+      //The fonts are coming in upside down
+      //Additionally, the large font #1 has padding at the (now) bottom that causes problems
+      //The fonts really need to be updated
+      temp = flipByte(temp);
+
+      for (j = 0 ; j < 8 ; j++) {
+        if (temp & 0x01) {
+          setPixelGS(x + i, y + j + ((rowsToDraw - 1 - row) * 8), grayscale);
+        }
+        // TODO check this line and adjust to grayscale. Original: setPixel(x + i, y + j + ((rowsToDraw - 1 - row) * 8), !color, mode);
+        else {
+          setPixelGS(x + i, y + j + ((rowsToDraw - 1 - row) * 8), !grayscale);
+        }
+        temp >>= 1;
+      }
+    }
+  }
+}
+
 /*
   Draw Bitmap image on screen. The array for the bitmap can be stored in the Arduino file, 
   so user don't have to mess with the library files.
@@ -771,6 +1012,17 @@ void  SSD1320::drawChar(uint8_t x, uint8_t y, uint8_t c, uint8_t color, uint8_t 
 void SSD1320::drawBitmap(uint8_t * bitArray)
 {
   for (int i = 0; i < (_displayWidth * _displayHeight / 8); i++)
+    screenMemory[i] = bitArray[i];
+}
+
+/*
+  Draw grayscale Bitmap image on screen. The array for the bitmap can be stored in the Arduino file, 
+  so user don't have to mess with the library files.
+  To use, create uint8_t array that is 160x32 pixels (2560 bytes). Then call .drawBitmap and pass it the array.
+*/
+void SSD1320::drawBitmap(uint8_t * bitArray)
+{
+  for (int i = 0; i < (_displayWidth * _displayHeight / 2); i++)
     screenMemory[i] = bitArray[i];
 }
 
