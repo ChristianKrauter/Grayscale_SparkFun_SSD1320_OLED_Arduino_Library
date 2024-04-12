@@ -109,7 +109,9 @@ class SSD1320 : public Print {
 
     // LCD Draw functions
     void clearDisplay(uint8_t mode = CLEAR_ALL);
+    void clearDisplayGS(uint8_t mode = CLEAR_ALL);
     void display(void);
+    void displayGS(void);
     void setCursor(uint8_t x, uint8_t y);
 
     void invert(boolean inv);
@@ -119,6 +121,7 @@ class SSD1320 : public Print {
 
     void setPixel(uint8_t x, uint8_t y);
     void setPixel(uint8_t x, uint8_t y, uint8_t color, uint8_t mode);
+    void setPixelGS(uint8_t x, uint8_t y, uint8_t grayscale);
 
     void line(uint8_t x0, uint8_t y0, uint8_t x1, uint8_t y1);
     void line(uint8_t x0, uint8_t y0, uint8_t x1, uint8_t y1, uint8_t color, uint8_t mode);
