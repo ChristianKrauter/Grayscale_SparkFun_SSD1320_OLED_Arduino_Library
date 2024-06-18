@@ -146,6 +146,9 @@ class SSD1320 : public Print {
     void circleFill(uint8_t x0, uint8_t y0, uint8_t radius);
     void circleFill(uint8_t x0, uint8_t y0, uint8_t radius, uint8_t color, uint8_t mode);
     void circleFillGS(uint8_t x0, uint8_t y0, uint8_t radius, uint8_t grayscale);
+    void drawCircleGS(int x0, int y0, int x, int y, uint8_t grayscale);
+    void drawFilledCircleGS(int x0, int y0, int x, int y, uint8_t grayscale);
+
 
     void drawChar(uint8_t x, uint8_t y, uint8_t c);
     void drawChar(uint8_t x, uint8_t y, uint8_t c, uint8_t color, uint8_t mode);

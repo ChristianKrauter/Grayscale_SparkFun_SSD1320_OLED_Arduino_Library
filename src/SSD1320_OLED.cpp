@@ -799,41 +799,44 @@ void SSD1320::circle(uint8_t x0, uint8_t y0, uint8_t radius, uint8_t color, uint
   }
 }
 
-/** \brief Draw grayscale circle
+/** \brief Draw pixel in all 8 quadrants after Bresenham’s algorithm
+  Use 4bit grayscale color (0-15) at x,y of the screen buffer.
+*/
+void SSD1320::drawCircleGS(int x0, int y0, int x, int y, uint8_t grayscale)
+{
+    setPixelGS(x0+x, y0+y, grayscale);
+    setPixelGS(x0-x, y0+y, grayscale);
+    setPixelGS(x0+x, y0-y, grayscale);
+    setPixelGS(x0-x, y0-y, grayscale);
+    setPixelGS(x0+y, y0+x, grayscale);
+    setPixelGS(x0-y, y0+x, grayscale);
+    setPixelGS(x0+y, y0-x, grayscale);
+    setPixelGS(x0-y, y0-x, grayscale);
+}
+
+/** \brief Draw grayscale circle with Bresenham’s algorithm.
   Draw circle with radius using 4bit grayscale color (0-15) at x,y of the screen buffer.
 */
 void SSD1320::circleGS(uint8_t x0, uint8_t y0, uint8_t radius, uint8_t grayscale) {
-  //TODO - find a way to check for no overlapping of pixels so that XOR draw mode will work perfectly
-  int8_t f = 1 - radius;
-  int8_t ddF_x = 1;
-  int8_t ddF_y = -2 * radius;
+  // TODO - - find a way to check for no overlapping of pixels so that XOR draw mode will work perfectly
+  int8_t d = 3 - 2 * radius;
   int8_t x = 0;
   int8_t y = radius;
 
-  setPixelGS(x0, y0 + radius, grayscale);
-  setPixelGS(x0, y0 - radius, grayscale);
-  setPixelGS(x0 + radius, y0, grayscale);
-  setPixelGS(x0 - radius, y0, grayscale);
+  drawCircleGS(x0, y0, x, y, grayscale);
 
-  while (x < y) {
-    if (f >= 0) {
-      y--;
-      ddF_y += 2;
-      f += ddF_y;
-    }
+  while (x <= y) {
     x++;
-    ddF_x += 2;
-    f += ddF_x;
 
-    setPixelGS(x0 + x, y0 + y, grayscale);
-    setPixelGS(x0 - x, y0 + y, grayscale);
-    setPixelGS(x0 + x, y0 - y, grayscale);
-    setPixelGS(x0 - x, y0 - y, grayscale);
+    if (d > 0) {
+      y--;
+      d = d + 4 * (x-y) + 10;
+    }
+    else {
+      d = d + 4 * x + 6;
+    }
 
-    setPixelGS(x0 + y, y0 + x, grayscale);
-    setPixelGS(x0 - y, y0 + x, grayscale);
-    setPixelGS(x0 + y, y0 - x, grayscale);
-    setPixelGS(x0 - y, y0 - x, grayscale);
+    drawCircleGS(x0, y0, x, y, grayscale);
   }
 }
 
@@ -883,39 +886,38 @@ void SSD1320::circleFill(uint8_t x0, uint8_t y0, uint8_t radius, uint8_t color, 
   }
 }
 
-/** \brief Draw filled grayscale circle
+/** \brief Draw lines in all 8 quadrants after Bresenham’s algorithm
+  Use 4bit grayscale color (0-15) at x,y of the screen buffer.
+*/
+void SSD1320::drawFilledCircleGS(int x0, int y0, int x, int y, uint8_t grayscale)
+{
+    lineGS(x0+x, y0+y, x0-x, y0+y, grayscale);
+    lineGS(x0+x, y0-y, x0-x, y0-y, grayscale);    
+    lineGS(x0+y, y0+x, x0-y, y0+x, grayscale);
+    lineGS(x0+y, y0-x, x0-y, y0-x, grayscale);
+}
+
+/** \brief Draw filled grayscale circle Bresenham’s algorithm
     Draw filled circle with radius using 4bit grayscale color (0-15) at x,y of the screen buffer.
 */
 void SSD1320::circleFillGS(uint8_t x0, uint8_t y0, uint8_t radius, uint8_t grayscale) {
-  // TODO - - find a way to check for no overlapping of pixels so that XOR draw mode will work perfectly
-  int8_t f = 1 - radius;
-  int8_t ddF_x = 1;
-  int8_t ddF_y = -2 * radius;
+  int8_t d = 3 - 2 * radius;
   int8_t x = 0;
   int8_t y = radius;
 
-  for (uint8_t i = y0 - radius ; i <= y0 + radius ; i++) {
-    setPixelGS(x0, i, grayscale);
-  }
+  drawFilledCircleGS(x0, y0, x, y, grayscale);
 
-  while (x < y) {
-    if (f >= 0) {
-      y--;
-      ddF_y += 2;
-      f += ddF_y;
-    }
+  while (x <= y) {
     x++;
-    ddF_x += 2;
-    f += ddF_x;
 
-    for (uint8_t i = y0 - y ; i <= y0 + y ; i++) {
-      setPixelGS(x0 + x, i, grayscale);
-      setPixelGS(x0 - x, i, grayscale);
+    if (d > 0) {
+      y--;
+      d = d + 4 * (x-y) + 10;
     }
-    for (uint8_t i = y0 - x ; i <= y0 + x ; i++) {
-      setPixelGS(x0 + y, i, grayscale);
-      setPixelGS(x0 - y, i, grayscale);
-    }
+    else
+      d = d + 4 * x + 6;
+    
+    drawFilledCircleGS(x0, y0, x, y, grayscale);
   }
 }
 
