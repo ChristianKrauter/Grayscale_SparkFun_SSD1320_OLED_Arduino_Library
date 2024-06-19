@@ -1056,13 +1056,13 @@ void SSD1320::setPixelGS(uint8_t x, uint8_t y, uint8_t grayscale) {
   int pixelNumber = (x + y*_displayWidth);
   int byteNumber = pixelNumber/2;
 
-  // First half of byte
-  if (pixelNumber % 2 == 0){
-    screenMemoryGS[byteNumber] = ((grayscale & 0x0F) << 4) | (screenMemoryGS[byteNumber] & 0x0F);
+  // First pixel in second half of byte
+  if (pixelNumber % 2 == 1){
+    screenMemoryGS[byteNumber] = (grayscale << 4) | (screenMemoryGS[byteNumber] & 0x0F);
 
-  // Second half of byte
+  // Second pixel in first half of byte
   } else {
-    screenMemoryGS[byteNumber] = ((grayscale & 0x0F) | (screenMemoryGS[byteNumber] & 0xF0));
+    screenMemoryGS[byteNumber] = grayscale | (screenMemoryGS[byteNumber] & 0xF0);
   }
 }
 
