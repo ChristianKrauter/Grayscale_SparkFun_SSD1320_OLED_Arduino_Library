@@ -558,13 +558,13 @@ void SSD1320::line(uint8_t x0, uint8_t y0, uint8_t x1, uint8_t y1) {
 void SSD1320::line(uint8_t x0, uint8_t y0, uint8_t x1, uint8_t y1, uint8_t color, uint8_t mode) {
   uint8_t steep = abs(y1 - y0) > abs(x1 - x0);
   if (steep) {
-    swap(x0, y0);
-    swap(x1, y1);
+    SSD1320_swap(x0, y0);
+    SSD1320_swap(x1, y1);
   }
 
   if (x0 > x1) {
-    swap(x0, x1);
-    swap(y0, y1);
+    SSD1320_swap(x0, x1);
+    SSD1320_swap(y0, y1);
   }
 
   uint8_t dx, dy;
@@ -600,13 +600,13 @@ void SSD1320::line(uint8_t x0, uint8_t y0, uint8_t x1, uint8_t y1, uint8_t color
 void SSD1320::lineGS(uint8_t x0, uint8_t y0, uint8_t x1, uint8_t y1, uint8_t grayscale) {
   uint8_t steep = abs(y1 - y0) > abs(x1 - x0);
   if (steep) {
-    swap(x0, y0);
-    swap(x1, y1);
+    SSD1320_swap(x0, y0);
+    SSD1320_swap(x1, y1);
   }
 
   if (x0 > x1) {
-    swap(x0, x1);
-    swap(y0, y1);
+    SSD1320_swap(x0, x1);
+    SSD1320_swap(y0, y1);
   }
 
   uint8_t dx, dy;

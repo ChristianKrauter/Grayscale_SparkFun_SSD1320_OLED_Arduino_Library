@@ -15,7 +15,7 @@
 #define CS_PIN_DEFAULT 10
 #define RST_PIN_DEFAULT 8
 
-#define swap(a, b) { uint8_t t = a; a = b; b = t; }
+#define SSD1320_swap(a, b) { uint8_t t = a; a = b; b = t; }
 
 #define BLACK 0
 #define WHITE 1
