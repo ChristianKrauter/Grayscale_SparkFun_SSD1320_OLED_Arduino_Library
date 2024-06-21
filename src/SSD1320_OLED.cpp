@@ -545,6 +545,43 @@ size_t SSD1320::write(uint8_t c) {
   return 1;
 }
 
+void SSD1320::printStringGS(uint8_t startX, uint8_t startY, String text, uint8_t grayscale, uint8_t font) {
+  setFontType(font);
+  setCursor(startX,startY);
+ 
+  for(int i = 0; i < text.length(); i++ ) {
+    char c = text[i];
+    writeGS(c, grayscale);
+  }
+}
+
+/** \brief Override Arduino's Print.
+  Arduino's print overridden so that we can use oled.print().
+*/
+size_t SSD1320::writeGS(uint8_t c, uint8_t grayscale) {
+  if (c == '\n')
+  {
+    cursorY += fontHeight;
+    cursorX = 0;
+  }
+  else if (c == '\r')
+  {
+    // skip
+  }
+  else
+  {
+    drawCharGS(cursorX, cursorY, c, grayscale);
+    cursorX += fontWidth + 1;
+    if ((cursorX > (_displayWidth - fontWidth)))
+    {
+      cursorY += fontHeight;
+      cursorX = 0;
+    }
+  }
+
+  return 1;
+}
+
 /** \brief Draw line.
   Draw line using current fore color and current draw mode from x0,y0 to x1,y1 of the screen buffer.
 */
@@ -994,6 +1031,83 @@ void  SSD1320::drawChar(uint8_t x, uint8_t y, uint8_t c, uint8_t color, uint8_t 
         }
         else {
           setPixel(x + i, y + j + ((rowsToDraw - 1 - row) * 8), !color, mode);
+        }
+        temp >>= 1;
+      }
+    }
+  }
+}
+
+/** \brief Draw character with color and mode.
+    Draw character c using color and draw mode at x,y.
+*/
+void  SSD1320::drawCharGS(uint8_t x, uint8_t y, uint8_t c, uint8_t grayscale) {
+  // TODO - New routine to take font of any height, at the moment limited to font height in multiple of 8 pixels
+
+  uint8_t rowsToDraw, row, tempC;
+  uint8_t i, j, temp;
+  uint16_t charPerBitmapRow, charColPositionOnBitmap, charRowPositionOnBitmap, charBitmapStartPosition;
+
+  if ((c < fontStartChar) || (c > (fontStartChar + fontTotalChar - 1))) // no bitmap available for the required c
+    return;
+
+  tempC = c - fontStartChar; //Turn user's character into a byte number
+
+  // each row (in datasheet is called a page) is 8 bits high, 16 bit high character will have 2 rows to be drawn
+  rowsToDraw = fontHeight / 8; // 8 is LCD's page size, see datasheet
+  if (rowsToDraw < 1) rowsToDraw = 1;
+
+  // The following draw function can draw anywhere on the screen, but SLOW pixel by pixel draw
+  if (rowsToDraw == 1) {
+    for  (i = 0 ; i < fontWidth + 1 ; i++)
+    {
+      if (i == fontWidth) // this is done in a weird way because for 5x7 font, there is no margin, this code add a margin after col 5
+        temp = 0;
+      else
+        temp = pgm_read_byte(fontsPointer[fontType] + FONTHEADERSIZE + (tempC * fontWidth) + i);
+
+      //0x7F is the first vertical line of the lowercase letter h
+      //The fonts are coming in upside down?
+      temp = flipByte(temp);
+
+      //Step through this line of the character checking each bit and setting a pixel
+      for (j = 0 ; j < 8 ; j++)
+      {
+        if (temp & 0x01) {
+          setPixelGS(x + i, y + j, grayscale);
+        }
+        else {
+          //setPixelGS(x + i, y + j, 0);
+        }
+
+        temp >>= 1;
+      }
+    }
+    return;
+  }
+
+  // Font height over 8 bit
+  // Take character "0" ASCII 48 as example
+  charPerBitmapRow = fontMapWidth / fontWidth; // 256/8 = 32 char per row
+  charColPositionOnBitmap = tempC % charPerBitmapRow; // = 16
+  charRowPositionOnBitmap = int(tempC / charPerBitmapRow); // = 1
+  charBitmapStartPosition = (charRowPositionOnBitmap * fontMapWidth * (fontHeight / 8)) + (charColPositionOnBitmap * fontWidth) ;
+
+  for (row = 0 ; row < rowsToDraw ; row++) {
+    for (i = 0 ; i < fontWidth ; i++) {
+      temp = pgm_read_byte(fontsPointer[fontType] + FONTHEADERSIZE + (charBitmapStartPosition + i + (row * fontMapWidth)));
+
+      //The fonts are coming in upside down
+      //Additionally, the large font #1 has padding at the (now) bottom that causes problems
+      //The fonts really need to be updated
+      temp = flipByte(temp);
+
+      for (j = 0 ; j < 8 ; j++) {
+        if (temp & 0x01) {
+          setPixelGS(x + i, y + j + ((rowsToDraw - 1 - row) * 8), grayscale);
+        }
+        else {
+          setPixelGS(x + i, y + j + ((rowsToDraw - 1 - row) * 8), 0);
         }
         temp >>= 1;
       }
