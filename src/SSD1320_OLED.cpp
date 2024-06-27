@@ -561,7 +561,7 @@ void SSD1320::printStringGS(uint8_t startX, uint8_t startY, String text, uint8_t
 size_t SSD1320::writeGS(uint8_t c, uint8_t grayscale) {
   if (c == '\n')
   {
-    cursorY += fontHeight;
+    cursorY -= fontHeight;
     cursorX = 0;
   }
   else if (c == '\r')
@@ -574,7 +574,7 @@ size_t SSD1320::writeGS(uint8_t c, uint8_t grayscale) {
     cursorX += fontWidth + 1;
     if ((cursorX > (_displayWidth - fontWidth)))
     {
-      cursorY += fontHeight;
+      cursorY -= fontHeight;
       cursorX = 0;
     }
   }
