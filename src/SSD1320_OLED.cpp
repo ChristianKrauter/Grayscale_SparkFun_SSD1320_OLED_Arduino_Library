@@ -545,20 +545,23 @@ size_t SSD1320::write(uint8_t c) {
   return 1;
 }
 
-void SSD1320::printStringGS(uint8_t startX, uint8_t startY, String text, uint8_t grayscale, uint8_t font) {
+void SSD1320::printStringGS(uint8_t startX, uint8_t startY, String text, bool drawBackground, uint8_t grayscale, uint8_t font)
+{
   setFontType(font);
-  setCursor(startX,startY);
- 
-  for(int i = 0; i < text.length(); i++ ) {
+  setCursor(startX, startY);
+
+  for (int i = 0; i < text.length(); i++)
+  {
     char c = text[i];
-    writeGS(c, grayscale);
+    writeGS(c, drawBackground, grayscale);
   }
 }
 
 /** \brief Override Arduino's Print.
   Arduino's print overridden so that we can use oled.print().
 */
-size_t SSD1320::writeGS(uint8_t c, uint8_t grayscale) {
+size_t SSD1320::writeGS(uint8_t c, bool drawBackground, uint8_t grayscale)
+{
   if (c == '\n')
   {
     cursorY -= fontHeight;
@@ -570,7 +573,7 @@ size_t SSD1320::writeGS(uint8_t c, uint8_t grayscale) {
   }
   else
   {
-    drawCharGS(cursorX, cursorY, c, grayscale);
+    drawCharGS(cursorX, cursorY, c, drawBackground, grayscale);
     cursorX += fontWidth + 1;
     if ((cursorX > (_displayWidth - fontWidth)))
     {
@@ -1041,7 +1044,8 @@ void  SSD1320::drawChar(uint8_t x, uint8_t y, uint8_t c, uint8_t color, uint8_t 
 /** \brief Draw character with color and mode.
     Draw character c using color and draw mode at x,y.
 */
-void  SSD1320::drawCharGS(uint8_t x, uint8_t y, uint8_t c, uint8_t grayscale) {
+void SSD1320::drawCharGS(uint8_t x, uint8_t y, uint8_t c, bool drawBackground, uint8_t grayscale)
+{
   // TODO - New routine to take font of any height, at the moment limited to font height in multiple of 8 pixels
 
   uint8_t rowsToDraw, row, tempC;
@@ -1060,6 +1064,20 @@ void  SSD1320::drawCharGS(uint8_t x, uint8_t y, uint8_t c, uint8_t grayscale) {
   // The following draw function can draw anywhere on the screen, but SLOW pixel by pixel draw
   if (rowsToDraw == 1) {
     for  (i = 0 ; i < fontWidth + 1 ; i++)
+
+    // Draw background one pixel before character starts
+    if (drawBackground)
+    {
+      if (grayscale == 0)
+      {
+      lineGS(x-1, y, x-1, y + fontHeight + 1, 15);
+      } else
+      {
+        lineGS(x-1, y, x-1, y + fontHeight + 1, 0);
+      }
+    }
+
+    for (i = 0; i <= fontWidth; i++)
     {
       if (i == fontWidth) // this is done in a weird way because for 5x7 font, there is no margin, this code add a margin after col 5
         temp = 0;
@@ -1071,13 +1089,21 @@ void  SSD1320::drawCharGS(uint8_t x, uint8_t y, uint8_t c, uint8_t grayscale) {
       temp = flipByte(temp);
 
       //Step through this line of the character checking each bit and setting a pixel
-      for (j = 0 ; j < 8 ; j++)
+      for (j = 0; j <= 8; j++) // <*=* 8 to draw background one line above character as well
       {
         if (temp & 0x01) {
           setPixelGS(x + i, y + j, grayscale);
         }
-        else {
-          //setPixelGS(x + i, y + j, 0);
+        else if (drawBackground)
+        {
+          if (grayscale == 0)
+          {
+            setPixelGS(x + i, y + j, 15);
+          }
+          else
+          {
+            setPixelGS(x + i, y + j, 0);
+          }
         }
 
         temp >>= 1;
