@@ -98,10 +98,10 @@ class SSD1320 : public Print {
             uint8_t sdoutPin = SDOUT_PIN_DEFAULT,
             SPIClass *spiInterface = &SPI);
     void begin(uint16_t lcdWidth, uint16_t lcdHeight);
-    void begin(uint16_t, uint16_t, HardwareSerial*);
-    virtual size_t write(uint8_t);
-    virtual size_t writeGS(uint8_t, bool drawBackground, uint8_t); // TODO add variable names everywhere
-    void printStringGS(uint8_t, uint8_t, String, bool drawBackground, uint8_t, uint8_t); // TODO update printStringGS function everywhere (examples!)
+    void begin(uint16_t lcdWidth, uint16_t lcdHeight, HardwareSerial* hwPrint);
+    virtual size_t write(uint8_t c);
+    virtual size_t writeGS(uint8_t c, bool drawBackground, uint8_t grayscale);
+    void printStringGS(uint8_t startX, uint8_t startY, String text, bool drawBackground, uint8_t grayscale, uint8_t font);
 
     // RAW LCD functions
     void command(uint8_t cmd);
@@ -160,8 +160,8 @@ class SSD1320 : public Print {
 
     uint16_t getDisplayWidth(void);
     uint16_t getDisplayHeight(void);
-    void setDisplayWidth(uint16_t);
-    void setDisplayHeight(uint16_t);
+    void setDisplayWidth(uint16_t W);
+    void setDisplayHeight(uint16_t H);
     void setColor(uint8_t color);
     void setDrawMode(uint8_t mode);
     uint8_t *getScreenBuffer(void);
